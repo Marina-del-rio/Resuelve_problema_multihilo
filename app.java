@@ -9,7 +9,8 @@ public class app {
             lock.lock();
             try {
             System.out.println("El Escritor está escribiendo...");
-            
+            System.out.println("El Escritor terminó de escribir.");
+
 
 
             }
