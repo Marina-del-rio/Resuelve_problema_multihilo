@@ -3,21 +3,31 @@ import java.util.concurrent.locks.ReentrantLock;
  * Clase principal donde meteremos 
  */
 public class app {
+
+    int recurso = 0; 
+    ReentrantLock lock = new ReentrantLock();
     public static void main(String[] args) {
-        ReentrantLock lock = new ReentrantLock();
-        Thread hiloEscritor = new Thread(() -> {
-            lock.lock();
-            try {
-            System.out.println("El Escritor está escribiendo...");
-            System.out.println("El Escritor terminó de escribir.");
+        
+        
+        
 
 
 
-            }
-            catch
+    }
+
+    public void leer(String id) {
+        lock.lock(); 
+        try {
+            System.out.println(id + " leyendo valor: " + recurso);
+            Thread.sleep(500); // tiempo de lectura
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock(); // desbloquear
         }
         
-        );
+    }
+    public void esribir() {
 
     }
 }
