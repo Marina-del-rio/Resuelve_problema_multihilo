@@ -1,33 +1,26 @@
-import java.util.concurrent.locks.ReentrantLock;
-/**
- * Clase principal donde meteremos 
- */
+import Modelos.Buffer;
+import Modelos.Escritor;
+import Modelos.Lector;
+
 public class App {
 
-    int recurso = 0; 
-    ReentrantLock lock = new ReentrantLock();
     public static void main(String[] args) {
         
+        System.out.println("Iniciando simulación de Lectores-Escritores...");
         
+        Buffer buffer = new Buffer(); // El recurso compartido
+
+        // Creamos los hilos
+        Thread escritor1 = new Escritor("E1", buffer);
+    
+
+        Thread lector1 = new Lector("L1", buffer);
+        Thread lector2 = new Lector("L2", buffer);
         
 
-
-
-    }
-
-    public void leer(String id) {
-        lock.lock(); 
-        try {
-            System.out.println(id + " leyendo valor: " + recurso);
-            Thread.sleep(500); // tiempo de lectura
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            lock.unlock(); // desbloquear
-        }
-        
-    }
-    public void esribir() {
-
+        // Iniciamos todos los hilos
+        escritor1.start();
+        lector1.start();
+        lector2.start();
     }
 }
