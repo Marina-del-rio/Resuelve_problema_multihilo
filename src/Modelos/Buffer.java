@@ -1,62 +1,55 @@
 package Modelos;
 
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class Buffer {
 
-    public Queue<Integer> buffer = new LinkedList<>();
-    int capacidad = 5;
+    // Cambiamos a String porque tu Escritor envía texto ("Dato de...")
+    private List<String> buffer = new CopyOnWriteArrayList<>();
 
-    public void leer(String id, int recurso) {
-        
-        while (!buffer.isEmpty()) {
-            System.out.println(id + " leyendo valor: " + recurso);
-            
-        }  
-       
-        notifyAll();
-    }
+    private int capacidad = 5;
 
-    public synchronized void escribir(String id,int nuevoValor) {
-        
+    public synchronized void iniciarLectura(String id) {
         try {
-            while (buffer.size() <= capacidad) {
-                System.out.println(id + " escribiendo valor: " + nuevoValor);
+            while (buffer.isEmpty()) {
+                System.out.println(id + " esperando datos...");
                 wait();
             }
-            buffer.add(nuevoValor);
-            notifyAll();
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
-    }
 
-    public void iniciarLectura(String id) {
-       
-    }
-
-    public String obtenerDatos() {
-        return String.join(", ", buffer.stream().map(Object::toString).toArray(String[]::new));
-    }
-
-    public void anadirDato(String nuevoValor) {
-        if (buffer.size() < capacidad) {
-            buffer.add(Integer.parseInt(nuevoValor));
-        }
-      
-    }
-
-    public void finalizarEscritura(String id) {
-       
     }
 
     public void finalizarLectura(String id) {
-       
+
     }
 
-    public void iniciarEscritura(String id) {
-     
+    public String obtenerDatos() {
+        return buffer.toString();
     }
-    
+
+    public synchronized void iniciarEscritura(String id) {
+        try {
+            while (buffer.size() >= capacidad) {
+                wait();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public void finalizarEscritura(String id) {
+
+    }
+
+    public synchronized void anadirDato(String nuevoValor) {
+        buffer.add(nuevoValor);
+
+        notifyAll();
+
+    }
+
+    // TODO: Hacer que leer y escribir puedan suceder a la vez
 }
