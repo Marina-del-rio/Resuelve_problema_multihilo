@@ -14,7 +14,7 @@ public class Escritor extends Thread {
     public void run() {
         try {
             for (int i = 1; i <= 3; i++) {
-                buffer.iniciarLectura(this.id);
+                buffer.iniciarEscritura(this.id);
 
                 try {
                     // --- Escritura exclusiva ---

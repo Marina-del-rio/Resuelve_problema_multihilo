@@ -41,6 +41,9 @@ public class Buffer {
     }
 
     public void anadirDato(String nuevoValor) {
+        if (buffer.size() < capacidad) {
+            buffer.add(Integer.parseInt(nuevoValor));
+        }
       
     }
 
@@ -50,6 +53,10 @@ public class Buffer {
 
     public void finalizarLectura(String id) {
        
+    }
+
+    public void iniciarEscritura(String id) {
+     
     }
     
 }
