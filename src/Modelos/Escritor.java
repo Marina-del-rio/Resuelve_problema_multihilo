@@ -19,15 +19,15 @@ public class Escritor extends Thread {
                 try {
                     // --- Escritura exclusiva ---
                     // Esta parte se ejecuta teniendo el "permiso" de escritura.
-                    String nuevoValor = "Dato de " + id + " (" + i + ")";
+                    String nuevoValor = i + "";
                     buffer.anadirDato(nuevoValor);
-                    System.out.println("==> Escritor " + id + " ha escrito: '" + nuevoValor + "'");
+                    System.out.println("==> Escritor " + id + " escribiendo: '" + nuevoValor + "'");
                     Thread.sleep(1500); // Simula tiempo de escritura
                 } finally {
                     // Nos aseguramos de liberar el lock de escritura.
                     buffer.finalizarEscritura(this.id);
                 }
-                
+
                 // Pausa antes de volver a escribir
                 Thread.sleep(2000);
             }
