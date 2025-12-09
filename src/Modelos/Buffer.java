@@ -1,73 +1,85 @@
 package Modelos;
 
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Representa un buffer compartido que permite lecturas concurrentes sin
+ * bloqueo.
+ * <p>
+ * Los lectores pueden leer libremente incluso mientras un escritor está
+ * escribiendo, ya que {@link CopyOnWriteArrayList} garantiza que cada lectura
+ * ve una versión estable del buffer.
+ * </p>
+ *
+ * <p>
+ * Solo se garantiza exclusividad entre escritores para evitar inconsistencias
+ * durante el proceso de escritura, pero los lectores jamás son bloqueados.
+ * </p>
+ */
 public class Buffer {
 
-    private List<String> buffer = new CopyOnWriteArrayList<>();
-    private int capacidad = 5;
+    /** Lista de datos compartidos. CopyOnWrite permite lecturas sin bloqueo. */
+    private final CopyOnWriteArrayList<String> buffer = new CopyOnWriteArrayList<>();
 
-    // --- Variables de control para Lectores-Escritores ---
-    private int lectoresActivos = 0; // Cuenta cuántos lectores están leyendo ahora mismo
-    private boolean escribiendo = false; // Indica si hay un escritor activo
+    /** Capacidad máxima del buffer. */
+    private final int capacidad = 5;
 
-    public synchronized void iniciarLectura(String id) {
-        try {
-            while (escribiendo || buffer.isEmpty()) {
-                if (buffer.isEmpty()) {
-                    System.out.println(id + " esperando datos (buffer vacío)...");
-                } else {
-                    System.out.println(id + " esperando a que termine el escritor...");
-                }
-                wait();
-            }
-            lectoresActivos++;
-            // --- AÑADE ESTO PARA VER LA CONCURRENCIA ---
-            System.out.println(">> " + id + " entró. Lectores actuales leyendo simultáneamente: " + lectoresActivos);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
+    /** Indica si un escritor está escribiendo actualmente. */
+    private boolean escribiendo = false;
 
-    public synchronized void finalizarLectura(String id) {
-        lectoresActivos--; // Un lector ha terminado
-
-        // Si ya no quedan lectores (es 0), notificamos a todos.
-        // Esto es crucial para despertar a un Escritor que esté esperando.
-        if (lectoresActivos == 0) {
-            notifyAll();
-        }
-    }
-
+    /**
+     * Devuelve el contenido actual del buffer.
+     * <p>
+     * Esta operación no requiere sincronización, ya que cada lector obtiene
+     * una vista consistente gracias a {@code CopyOnWriteArrayList}.
+     * </p>
+     *
+     * @return El contenido del buffer como cadena.
+     */
     public String obtenerDatos() {
         return buffer.toString();
     }
 
-    public synchronized void iniciarEscritura(String id) {
-        try {
-            // El escritor debe esperar si:
-            // 1. Hay lectores leyendo (lectoresActivos > 0)
-            // 2. O hay otro escritor escribiendo (escribiendo == true)
-            // 3. O el buffer está lleno (capacidad)
-            while (lectoresActivos > 0 || escribiendo || buffer.size() >= capacidad) {
-                wait();
-            }
-            // Si pasa, bloquea el acceso exclusivo
-            escribiendo = true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+    /**
+     * Solicita permiso para escribir un nuevo dato.
+     * <p>
+     * Un escritor debe esperar si:
+     * <ul>
+     * <li>Otro escritor está escribiendo.</li>
+     * <li>El buffer está lleno.</li>
+     * </ul>
+     * Los lectores nunca son bloqueados por esta operación.
+     * </p>
+     *
+     * @throws InterruptedException si el hilo escritor es interrumpido.
+     */
+    public synchronized void iniciarEscritura() throws InterruptedException {
+        while (escribiendo || buffer.size() >= capacidad) {
+            wait();
         }
+        escribiendo = true;
     }
 
-    public synchronized void finalizarEscritura(String id) {
-        escribiendo = false; // Libera el bloqueo
-        notifyAll(); // Despierta a los lectores que esperaban datos y a otros escritores
+    /**
+     * Finaliza una operación de escritura y permite que otros escritores
+     * continúen cuando sea posible.
+     */
+    public synchronized void finalizarEscritura() {
+        escribiendo = false;
+        notifyAll();
     }
 
-    public void anadirDato(String nuevoValor) {
-        // Ya no necesita 'synchronized' explícito aquí porque solo se llama
-        // cuando el hilo ya pasó por 'iniciarEscritura' (que garantiza exclusividad).
-        buffer.add(nuevoValor);
+    /**
+     * Añade un nuevo valor al buffer.
+     * <p>
+     * Este método no es sincronizado porque se garantiza que solo es invocado
+     * mientras el hilo ya posee el permiso exclusivo otorgado por
+     * {@link #iniciarEscritura()}.
+     * </p>
+     *
+     * @param valor Nuevo dato a almacenar.
+     */
+    public void anadirDato(String valor) {
+        buffer.add(valor);
     }
 }
